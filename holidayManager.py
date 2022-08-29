@@ -272,7 +272,7 @@ def main():
     Holidays.readjson(filelocation=initialListLocation)
 
     # 3. Scrape additional holidays using your HolidayList scrapeHolidays function.
-    #Holidays.scrapeHolidays()
+    Holidays.scrapeHolidays()
 
     # 4. Create while loop for user to keep adding or working with the Calender
     validUse = True
