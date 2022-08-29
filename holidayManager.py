@@ -1,10 +1,12 @@
 from datetime import datetime
 from datetime import date
+import datetime
 import json
 from xmlrpc.client import DateTime
 from bs4 import BeautifulSoup
 import requests
 from dataclasses import dataclass
+from config import initialListLocation
 
 ### Global functions ###
 
@@ -40,6 +42,19 @@ def get_date(prompt):
             print('Invalid date, try again.')
     return my_date
 
+# fucntion to validate interger input
+def get_int(prompt):
+    my_int = 0
+
+    is_valid = False
+
+    while not is_valid:
+        try:
+            my_int = int(input(prompt))
+            is_valid = True
+        except:
+            print('Invalid Integer, try again.')
+    return my_int
 # -------------------------------------------
 # Modify the holiday class to 
 # 1. Only accept Datetime objects for date.
@@ -106,7 +121,7 @@ class HolidayList:
             name_input = input("Please enter holiday name to remove: ")
             name = name_input.strip().upper()
             date = get_date("Enter date in the format [YYYY-MM-DD], i.e. [2021-06-02]: ")
-            searchHoliday = Holidays.findHoliday(HolidayName = Holiday(name, date))
+            searchHoliday = self.findHoliday(HolidayName = Holiday(name, date))
             # [test] print(f"removeHoliday: searchHoliday result: {searchHoliday}")
             # remove the Holiday from innerHolidays
             if searchHoliday != None:
@@ -116,7 +131,7 @@ class HolidayList:
                 break
             else:
                 print(f"Error: {name}: {date} not found.")
-        return print(f"test result: {self.innerHolidays}")
+        return # [test] print(f"test result: {self.innerHolidays}")
 
     def readjson(self, filelocation):
         # Read in things from json file location
@@ -138,15 +153,22 @@ class HolidayList:
         return # [test] print(f"test print {self.innerHolidays}")
     
     def save_to_json(self):
-        holiList = [holi.__dict__ for holi in Holidays.innerHolidays]
-        finalHoliList = []
-        for hol in holiList:
-            tempDict = {}
-            tempDict["name"] = hol["name"]
-            tempDict["date"] = (hol["date"]).strftime("%Y/%m/%d")
-            finalHoliList.append(tempDict)
-        with open("holidayList.json", "w") as f:
-            json.dump(finalHoliList, f)
+        print("Saving a Holiday List")
+        print("=====================")
+        choice = input("Are you sure you want to save your changes? [y/n]: ")
+        if choice == "y":
+            holiList = [holi.__dict__ for holi in self.innerHolidays]
+            finalHoliList = []
+            for hol in holiList:
+                tempDict = {}
+                tempDict["name"] = hol["name"]
+                tempDict["date"] = (hol["date"]).strftime("%Y/%m/%d")
+                finalHoliList.append(tempDict)
+            with open("holidayList.json", "w") as f:
+                json.dump(finalHoliList, f)
+            print("Success:\n Your changes have been saved.")
+        else:
+            print("Holiday list file save cancled.")
 
     def scrapeHolidays(self):
         yearList = ["2020", "2021", "", "2023", "2024"]
@@ -212,12 +234,86 @@ class HolidayList:
         numHolidays = len(self.innerHolidays)
         return print(f"There are {numHolidays} holidays in the system currently")
 
+    def filterHolidaysByWeek(self, yearNum, weekNum = datetime.date.today().isocalendar()[2]):
+        # Use a Lambda function to filter by week number and save this as holidays, use the filter on innerHolidays
+        filteredHolidaysWeek = list(filter(lambda x: int(x.date.strftime("%U")) == weekNum, self.innerHolidays))
+        filteredHolidaysYearWeek = list(filter(lambda x: x.date.isocalendar().year == yearNum, filteredHolidaysWeek))
+        for holiday in filteredHolidaysYearWeek:
+            print(holiday)
+        return
+
+    def viewHolidays(self):
+        print("View Holidays")
+        print("=============")
+        yearChoice = get_int("Which year?")
+        weekChoice = get_int("Which week? #[1-52, Enter 0 for the current week")
+        if weekChoice == 0:
+            self.filterHolidaysByWeek(yearNum = yearChoice)
+        else:
+            self.filterHolidaysByWeek(yearNum = yearChoice, weekNum = weekChoice)
+
+    def exit(self):
+        print('Exit')
+        print('====')
+        print('Any unsaved changes will be lost.')
+        resp = input('Are you sure you want to exit? [y/n]')
+        if resp == 'y':
+            return False
+        else:
+            return True
+
+def main():
+    # Large Pseudo Code steps
+    # -------------------------------------
+    # 1. Initialize HolidayList Object
+    Holidays = HolidayList()
+
+    # 2. Load JSON file via HolidayList read_json function
+    Holidays.readjson(filelocation=initialListLocation)
+
+    # 3. Scrape additional holidays using your HolidayList scrapeHolidays function.
+    #Holidays.scrapeHolidays()
+
+    # 4. Create while loop for user to keep adding or working with the Calender
+    validUse = True
+    while validUse:
+
+    # 5. Display User Menu (Print the menu)
+        print('Holiday Menu')
+        print('============')
+        print('1 - Add a Holiday')
+        print('2 - Remove a Holiday')
+        print('3 - Save a Holiday List')
+        print('4 - View Holidays')
+        print('5 - Exit')
+    # 6. Take user input for their action based on Menu and check the user input for errors
+    # 7. Run appropriate method from the HolidayList object depending on what the user input is
+        option = get_int('Enter preferred option to proceed')
+        if option == 1:
+            Holidays.addHoliday()
+        elif option == 2:
+            Holidays.removeHoliday()
+        elif option == 3:
+            Holidays.save_to_json()
+        elif option == 4:
+            Holidays.viewHolidays()
+        else:
+            validUse = Holidays.exit()
+    
+
+    # 8. Ask the User if they would like to Continue, if not, end the while loop, ending the program.  If they do wish to continue, keep the program going.
+
+if __name__ == "__main__":
+    main();
+
+#main()
 # initialize HolidayList
-Holidays = HolidayList()
-Holidays.readjson(filelocation="initial_holidays.json")
-Holidays.numHolidays()
-Holidays.addHoliday()
-Holidays.removeHoliday()
-Holidays.scrapeHolidays()
-Holidays.save_to_json()
-Holidays.numHolidays()
+# Holidays = HolidayList()
+# Holidays.readjson(filelocation="initial_holidays.json")
+# Holidays.numHolidays()
+# Holidays.addHoliday()
+# Holidays.removeHoliday()
+# Holidays.scrapeHolidays()
+# Holidays.save_to_json()
+# Holidays.numHolidays()
+# Holidays.viewHolidays()
