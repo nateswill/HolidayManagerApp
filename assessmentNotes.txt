@@ -1,0 +1,15 @@
+o look for built in functiont to check valid date
+o use unique holiday names, don't worry about 'type' (federal, state, etc.)
+o holiday class: name, date
+o careful wth weeks: january 1 will be in the middle of the week
+	as well as december 31
+o advice: get it working with original json holiday list first then 
+	webscrape later
+
+toDo
+o copy Noah's code to ipynb file
+o review assessments doc and starter file
+o review classes lessons & youtube videos on classes
+o get weather data from past 2 years from weather api
+o scrape holidays from website
+o need to upload config.py file to LMS, or alternatively share another way
